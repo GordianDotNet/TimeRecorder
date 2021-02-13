@@ -1,19 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using TimeRecorder.Models;
 
 namespace TimeRecorder
@@ -23,23 +15,63 @@ namespace TimeRecorder
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { WriteIndented = true };
+        private readonly static JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { WriteIndented = true };
 
         public MainWindow()
         {
             InitializeComponent();
+        }
 
-            _jsonOptions.Converters.Add(new TimeSpanConverter());
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _jsonOptions.Converters.Add(new TimeSpanConverter());
 
-            var currentWorkDay = LoadCurrentWorkday();
-            currentWorkDay.StartTimer();
+                var currentWorkDay = LoadCurrentWorkday();
+                currentWorkDay.StartTimer();
 
-            currentWorkDay.CurrentProject = currentWorkDay.AllProjects.LastOrDefault();
-            currentWorkDay.CurrentWorkdayTask = currentWorkDay.WorkdayTasks.LastOrDefault();
+                currentWorkDay.CurrentProject = currentWorkDay.LastUsedProject;
+                currentWorkDay.CurrentWorkdayTask = currentWorkDay.LastUsedWorkdayTask;
+                currentWorkDay.SetActiveWorkingTask(currentWorkDay.LastUsedWorkdayTask);
 
-            DataContext = currentWorkDay;
+                DataContext = currentWorkDay;
 
-            StartTimer();
+                StartTimer();
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex, true);
+            }
+        }
+
+        private static void ShowError(Exception ex, bool exit = false, [CallerMemberName] string memberName = "ERROR!")
+        {
+            var msg = JsonSerializer.Serialize(new {
+                Timestamp = DateTimeOffset.Now,
+                MemberName = memberName,
+                Message = ex.Message,
+                Stacktrace = ex?.StackTrace?.ToString(),
+                InnerMessage = ex?.InnerException?.Message,
+                InnerStacktrace = ex?.InnerException?.StackTrace?.ToString()
+            }, _jsonOptions);
+
+            Clipboard.SetText(msg);
+
+            MessageBox.Show($"{msg}", "ERROR - Remember: Error is copied to Clipboard!");
+            File.WriteAllText($"{DateTimeOffset.Now.ToFileTime()}_ErrorLog.txt", msg);
+
+            Clipboard.SetText(msg);
+
+            if (exit)
+            {
+                Environment.Exit(1);
+            }
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            SaveCurrentWorkdayAsync().Wait();
         }
 
         private readonly TimeSpan TICK_DURATION = TimeSpan.FromSeconds(10);
@@ -70,36 +102,98 @@ namespace TimeRecorder
         private Workday LoadCurrentWorkday()
         {
             var path = GetWorkdayPath();
+            var workday = LoadWorkday(path, true);
+
+            if (workday != null)
+            {
+                return workday;
+            }
+
+            var loginDate = DateTimeOffset.Now.AddMilliseconds(-Environment.TickCount);
+            // Use time from login if from today
+            loginDate = (loginDate.Date == DateTimeOffset.Now.Date) ? loginDate : DateTimeOffset.Now;
+
+            var orderedFiles = new DirectoryInfo(".")
+                .EnumerateFiles("*_Workday.json", new EnumerationOptions { IgnoreInaccessible = true })
+                .OrderByDescending(x => x.Name);
+
+            foreach (var file in orderedFiles)
+            {
+                var oldWorkday = LoadWorkday(file.FullName, false);
+                if (oldWorkday != null)
+                {
+                    // load old projects
+                    return new Workday() {
+                        WorkBegin = loginDate,
+                        AllProjects = oldWorkday.AllProjects, 
+                        PlannedWorkingHours = oldWorkday.PlannedWorkingHours,
+                    };
+                }
+            }
+
+            // no file found
+            return new Workday()
+            {
+                WorkBegin = loginDate,
+            };
+        }
+
+        private Workday? LoadWorkday(string path, bool copyFailedFile)
+        {
             if (File.Exists(path))
             {
                 try
                 {
                     var content = File.ReadAllText(path);
-                    return JsonSerializer.Deserialize<Workday>(content, _jsonOptions);
+                    Workday? workday = JsonSerializer.Deserialize<Workday>(content, _jsonOptions);
+
+                    try
+                    {
+                        var backupDir = $"backup/{DateTimeOffset.Now.DayOfWeek}";
+                        var backupDirInfo = new DirectoryInfo(backupDir);
+                        if (backupDirInfo.Exists && backupDirInfo.CreationTimeUtc < DateTimeOffset.UtcNow.Date)
+                        {
+                            Directory.Delete(backupDir);
+                        }
+                        Directory.CreateDirectory(backupDir);
+                        File.Copy(path, Path.Combine(backupDir, $"{Path.GetFileName(path)}.{DateTimeOffset.Now.ToFileTime()}"), true);
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowError(ex);
+                    }
+
+                    workday?.UpdateProjectReferences();
+                    return workday;
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
-                    File.Copy(path, $"{path}.Error{DateTimeOffset.Now:yyyyMMddHHmmss}.json");
-                    return new Workday();
+                    ShowError(ex);
+                    if (copyFailedFile)
+                    {
+                        File.Copy(path, $"{path}.Error{DateTimeOffset.Now:yyyyMMddHHmmss}.json");
+                    }
+                    return null;
                 }
             }
-            else
-            {
-                return new Workday();
-            }
+
+            return null;
         }
 
         private Task SaveCurrentWorkdayAsync()
         {
             try
             {
-                var content = JsonSerializer.Serialize(Data, _jsonOptions);
-                return File.WriteAllTextAsync(GetWorkdayPath(), content);
+                var data = Data;
+                if (data != null)
+                {
+                    var content = JsonSerializer.Serialize(Data, _jsonOptions);
+                    return File.WriteAllTextAsync(GetWorkdayPath(), content);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                ShowError(ex);
             }
 
             return Task.CompletedTask;
@@ -146,9 +240,24 @@ namespace TimeRecorder
             Data?.RemoveWorkdayTaskCommand.Execute(null);
         }
 
-        private void Window_Closed(object sender, EventArgs e)
+        private void SetActiveWorkdayTask(object sender, MouseButtonEventArgs e)
         {
-            SaveCurrentWorkdayAsync().Wait();
+            var workday = Data;
+            var workdayTask = Data?.CurrentWorkdayTask;
+            if (workday != null && workdayTask != null)
+            {
+                workday.SetActiveWorkingTask(workdayTask);
+            }
+        }
+
+        private void OnChangeWorkdayTaskProjectClick(object sender, RoutedEventArgs e)
+        {
+            var project = Data?.CurrentProject;
+            var workdayTask = Data?.CurrentWorkdayTask;
+            if (workdayTask != null && project != null)
+            {
+                workdayTask.Project = project;
+            }
         }
     }
 }

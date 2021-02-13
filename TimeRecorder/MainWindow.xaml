@@ -7,10 +7,12 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance local:Workday, IsDesignTimeCreatable=True}"
         Title="Time Recorder" Height="450" Width="800"
+        Loaded="Window_Loaded"
         Closed="Window_Closed"
         >
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
@@ -22,56 +24,135 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" MinWidth="50" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Label Grid.Row="0" Grid.Column="0" Content="Planned working hours" />
+                <Label Grid.Row="0" Grid.Column="0" Content="Planned hours" />
                 <Label Grid.Row="0" Grid.Column="1" Content="{Binding PlannedWorkingHours}" />
-                <ProgressBar Grid.Row="0" Grid.Column="2" Margin="8" Minimum="0" Maximum="{Binding PlannedWorkingHours.TotalMilliseconds, Mode=OneWay}" Value="{Binding RequiredWorkingHours.TotalMilliseconds, Mode=OneWay}" Visibility="Collapsed"/>
-                <Label Grid.Row="1" Grid.Column="0" Content="Work started today" />
-                <Label Grid.Row="1" Grid.Column="1" Content="{Binding WorkBegin}" ContentStringFormat="{x:Static local:Constants.DateTimeUiFormat}" />
-                <Label Grid.Row="1" Grid.Column="2" Content="{Binding WorkEnd}" ContentStringFormat="{x:Static local:Constants.DateTimeUiFormat}" />
-                <Label Grid.Row="2" Grid.Column="0" Content="Required today" />
-                <Label Grid.Row="2" Grid.Column="1" Content="{Binding RequiredWorkingHours}" />
-                <ProgressBar Grid.Row="2" Grid.Column="2" Margin="8" Minimum="0" Maximum="{Binding PlannedWorkingHours.TotalMilliseconds, Mode=OneWay}" Value="{Binding DoneWorkingHours.TotalMilliseconds, Mode=OneWay}" />
-                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal">
-                    <Button Content="Pause" Command="{Binding SetPauseCommand}" Margin="2" Padding="5" Width="200" />
-                    <Button Content="Absent" Command="{Binding SetAbsentCommand}" Margin="2" Padding="5" Width="200" />
-                    <Button Content="-30 min" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="-30" Margin="2" Padding="5" />
-                    <Button Content="-15 min" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="-15" Margin="2" Padding="5" />
-                    <Button Content="-5 min" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="-5" Margin="2" Padding="5" />
-                    <Button Content="+5 min" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="+5" Margin="2" Padding="5" />
-                    <Button Content="+15 min" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="+15" Margin="2" Padding="5" />
-                    <Button Content="+30 min" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="+30" Margin="2" Padding="5" />
+                <Label Grid.Row="0" Grid.Column="2" Content="{Binding PlannedWorkingHours.TotalHours}" ContentStringFormat="N2" />
+                <Label Grid.Row="1" Grid.Column="0" Content="Already worked" />
+                <Label Grid.Row="1" Grid.Column="1" Content="{Binding DoneWorkingHours}" />
+                <Label Grid.Row="1" Grid.Column="2" Content="{Binding DoneWorkingHours.TotalHours}" ContentStringFormat="N2" />
+                <Label Grid.Row="2" Grid.Column="0" Content="Already booked" />
+                <Label Grid.Row="2" Grid.Column="1" Content="{Binding BookedWorkingHours}" />
+                <Label Grid.Row="2" Grid.Column="2" Content="{Binding BookedWorkingHours.TotalHours}" ContentStringFormat="N2" />
+                <Label Grid.Row="3" Grid.Column="0" Content="Not booked" />
+                <Label Grid.Row="3" Grid.Column="1" Content="{Binding NotBookedWorkingHours}" />
+                <Label Grid.Row="3" Grid.Column="2" Content="{Binding NotBookedWorkingHours.TotalHours}" ContentStringFormat="N2" />
+
+                <Label Grid.Row="0" Grid.Column="4" Content="Planned end" />
+                <Label Grid.Row="0" Grid.Column="5" Grid.ColumnSpan="2" Content="{Binding PlannedWorkEnd}" ContentStringFormat="{x:Static local:Constants.DateTimeUiFormat}" />
+                
+                <Label Grid.Row="1" Grid.Column="4" Content="Started today" />
+                <Label Grid.Row="1" Grid.Column="5" Grid.ColumnSpan="2" Content="{Binding WorkBegin}" ContentStringFormat="{x:Static local:Constants.DateTimeUiFormat}" />
+                <Label Grid.Row="1" Grid.Column="7" Content="End" />
+                <Label Grid.Row="1" Grid.Column="8" Grid.ColumnSpan="2" Content="{Binding WorkEnd}" ContentStringFormat="{x:Static local:Constants.DateTimeUiFormat}" />
+                
+                <Label Grid.Row="2" Grid.Column="4" Content="Required today" />
+                <Label Grid.Row="2" Grid.Column="5" Content="{Binding RequiredWorkingHours}" />
+                <Label Grid.Row="2" Grid.Column="6" Content="{Binding RequiredWorkingHours.TotalHours}" ContentStringFormat="N2" />
+                <ProgressBar Grid.Row="2" Grid.Column="7" Grid.ColumnSpan="3" Margin="8" Minimum="0" Maximum="{Binding PlannedWorkingHours.TotalMilliseconds, Mode=OneWay}" Value="{Binding DoneWorkingHours.TotalMilliseconds, Mode=OneWay}" />
+                
+                <StackPanel Grid.Row="3" Grid.Column="4" Grid.ColumnSpan="12" Orientation="Horizontal">
+                    <Button Content="Pause" Command="{Binding SetPauseCommand}" Margin="2" Padding="5" MinWidth="100" />
+                    <Button Content="Not at Work" Command="{Binding SetAbsentCommand}" Margin="2" Padding="5" />
+                    <Button Content="-1" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="-1" Margin="2" Padding="5" />
+                    <Button Content="+1" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="+1" Margin="2" Padding="5" />
+                    <Button Content="-5" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="-5" Margin="2" Padding="5" />
+                    <Button Content="+5" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="+5" Margin="2" Padding="5" />
+                    <Button Content="-15" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="-5" Margin="2" Padding="5" />
+                    <Button Content="+15" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="+5" Margin="2" Padding="5" />
+                    <Button Content="-30" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="-30" Margin="2" Padding="5" />
+                    <Button Content="+30" Command="{Binding AddWorkdayTaskDurationCommand}" CommandParameter="+30" Margin="2" Padding="5" />
                 </StackPanel>
             </Grid>
         </Border>
         <Border Grid.Row="1" BorderBrush="Black" BorderThickness="1">
-            <ListView Grid.Row="1" Margin="2" ItemsSource="{Binding WorkdayTasks}" SelectedItem="{Binding CurrentWorkdayTask}">
+            <Grid Background="LightGreen">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Label Grid.Row="0" Grid.Column="1" Content="Start" />
+                <DatePickerTextBox Grid.Row="0" Grid.Column="2" Text="{Binding CurrentWorkdayTask.Created}" VerticalContentAlignment="Center"/>
+                <Label Grid.Row="0" Grid.Column="3" Content="-" />
+                <DatePickerTextBox Grid.Row="0" Grid.Column="4" Text="{Binding CurrentWorkdayTask.LastUsed}" VerticalContentAlignment="Center"/>
+            </Grid>
+        </Border>
+        <Border Grid.Row="2" BorderBrush="Black" BorderThickness="1">
+            <ListView Grid.Row="1" Margin="2" ItemsSource="{Binding WorkdayTasks}" SelectedItem="{Binding CurrentWorkdayTask}" MouseDoubleClick="SetActiveWorkdayTask">
+                <ListView.Resources>
+                    <Style TargetType="{x:Type GridViewColumnHeader}">
+                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                    </Style>
+                </ListView.Resources>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Path=IsActive}" Value="True">
+                                <Setter Property="Background" Value="LightGreen"  />
+                                <Setter Property="FontWeight" Value="Bold" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
                 <ListView.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="{Binding CurrentWorkdayTask.Project.ProjectName}" HeaderStringFormat="Remove {0}" Click="OnRemoveWorkEntryClick" />
+                        <MenuItem Header="{Binding CurrentProject.ProjectName}" HeaderStringFormat="Switch entry to selected project: '{0}'" Click="OnChangeWorkdayTaskProjectClick" />
+                        <MenuItem Header="{Binding CurrentWorkdayTask.Project.ProjectName}" HeaderStringFormat="Remove entry: '{0}'" Click="OnRemoveWorkEntryClick" />
                     </ContextMenu>
                 </ListView.ContextMenu>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Project" Width="150" DisplayMemberBinding="{Binding Project.ProjectName}" />
-                        <GridViewColumn Header="Start" Width="150">
+                        <GridViewColumn Header="Project" DisplayMemberBinding="{Binding Project.ProjectName}" />
+                        <GridViewColumn Header="Duration" Width="80" DisplayMemberBinding="{Binding TotalDuration}" />
+                        <GridViewColumn Header="Hours" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding TotalDuration.TotalHours, StringFormat={}{0:N1}}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Start" Width="80">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Created, StringFormat={x:Static local:Constants.TimeUiFormat}}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Duration" Width="150" DisplayMemberBinding="{Binding TotalDuration}" />
+                        <GridViewColumn Header="LastUsed" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding LastUsed, StringFormat={x:Static local:Constants.TimeUiFormat}}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>
         </Border>
-        <Border Grid.Row="2" BorderBrush="Black" BorderThickness="1">
+        <Border Grid.Row="3" BorderBrush="Black" BorderThickness="1">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />

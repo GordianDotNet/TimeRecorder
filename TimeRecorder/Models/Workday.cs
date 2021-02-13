@@ -13,50 +13,88 @@ namespace TimeRecorder.Models
     {
         public Workday()
         {
-            CurrentProject = AllProjects.FirstOrDefault();
-            WorkEnd = WorkBegin + PlannedWorkingHours;
+            CurrentProject = LastUsedProject;            
         }
 
         private readonly TimeSpan TICK_DURATION = TimeSpan.FromSeconds(1);
 
         public void StartTimer()
         {
+            WorkdayTasks = new ObservableCollection<WorkdayTask>(WorkdayTasks.OrderBy(x => x.Created).ToList());
+
             System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(DispatcherTimerTick);
             dispatcherTimer.Interval = TICK_DURATION;
             dispatcherTimer.Start();
         }
 
+        public void SetActiveWorkingTask(WorkdayTask newActiveWorkTask)
+        {
+            var activeWorkingTask = ActiveWorkingTask;
+            if (activeWorkingTask != null)
+            {
+                activeWorkingTask.IsActive = false;
+            }
+            if (newActiveWorkTask != null)
+            {
+                newActiveWorkTask.IsActive = true;
+                ActiveWorkingTask = newActiveWorkTask;
+            }
+        }
+
         private void DispatcherTimerTick(object? sender, EventArgs e)
         {
-            CurrentWorkdayTask?.UpdateDuration(TICK_DURATION);
+            var now = DateTimeOffset.Now;
+            ActiveWorkingTask?.UpdateDuration(TICK_DURATION);
 
-            var time = PlannedWorkingHours - (DateTimeOffset.Now - WorkBegin);
+            var time = PlannedWorkingHours - (now - WorkBegin);
             RequiredWorkingHours = new TimeSpan(time.Hours, time.Minutes, time.Seconds);
 
-            var timeDone = DateTimeOffset.Now - WorkBegin;
+            var timeDone = now - WorkBegin;
             DoneWorkingHours = new TimeSpan(timeDone.Hours, timeDone.Minutes, timeDone.Seconds);
+
+            var workingdayTasks = WorkdayTasks;
+            if (workingdayTasks.Count > 0)
+            {
+                BookedWorkingHours = TimeSpan.FromMilliseconds(workingdayTasks.Sum(x => (long)x.TotalDuration.TotalMilliseconds));
+            }
+            else
+            {
+                BookedWorkingHours = TimeSpan.Zero;
+            }
+
+            WorkEnd = now;
         }
 
         private TimeSpan _PlannedWorkingHours = new TimeSpan(8, 45, 0);
         public TimeSpan PlannedWorkingHours
         {
             get => _PlannedWorkingHours;
-            set => SetField(ref _PlannedWorkingHours, value);
+            set { SetField(ref _PlannedWorkingHours, value); OnPropertyChanged(nameof(PlannedWorkEnd)); }
+}
+
+        private TimeSpan _BookedWorkingHours = TimeSpan.Zero;
+
+        internal void UpdateProjectReferences()
+        {
+            var workingDayTasks = WorkdayTasks;
+            foreach (var workindDayTask in WorkdayTasks)
+            {
+                workindDayTask.Project = AllProjects.Where(x => x.ProjectId == workindDayTask.Project.ProjectId).FirstOrDefault() ?? workindDayTask.Project;
+            }
         }
 
-        private DateTime _WorkBegin = DateTime.Now;
-        public DateTime WorkBegin
+        [JsonIgnore]
+        public TimeSpan BookedWorkingHours
         {
-            get => _WorkBegin;
-            set => SetField(ref _WorkBegin, value);
+            get => _BookedWorkingHours;
+            set { SetField(ref _BookedWorkingHours, value); OnPropertyChanged(nameof(NotBookedWorkingHours)); }
         }
 
-        private DateTime? _WorkEnd;
-        public DateTime? WorkEnd
+        [JsonIgnore]
+        public TimeSpan NotBookedWorkingHours
         {
-            get => _WorkEnd;
-            set => SetField(ref _WorkEnd, value);
+            get => DoneWorkingHours - BookedWorkingHours;
         }
 
         private TimeSpan _RequiredWorkingHours;
@@ -73,11 +111,37 @@ namespace TimeRecorder.Models
             set => SetField(ref _DoneWorkingHours, value);
         }
 
+        private DateTimeOffset _WorkBegin = DateTime.Now;
+        public DateTimeOffset WorkBegin
+        {
+            get => _WorkBegin;
+            set { SetField(ref _WorkBegin, value); OnPropertyChanged(nameof(PlannedWorkEnd)); }
+        }
+
+        [JsonIgnore]
+        public DateTimeOffset? PlannedWorkEnd
+        {
+            get => WorkBegin + PlannedWorkingHours;
+        }
+
+        private DateTimeOffset? _WorkEnd;
+
+        public DateTimeOffset? WorkEnd
+        {
+            get => _WorkEnd;
+            set => SetField(ref _WorkEnd, value);
+        }
+
         private ObservableCollection<WorkdayTask> _WorkdayTasks = new ObservableCollection<WorkdayTask>();
         public ObservableCollection<WorkdayTask> WorkdayTasks
         {
             get => _WorkdayTasks;
             set => SetField(ref _WorkdayTasks, value);
+        }
+
+        public WorkdayTask LastUsedWorkdayTask
+        {
+            get => WorkdayTasks.OrderByDescending(x => x.LastUsed).FirstOrDefault();
         }
 
         private WorkdayTask? _CurrentWorkdayTask;
@@ -88,11 +152,24 @@ namespace TimeRecorder.Models
             set => SetField(ref _CurrentWorkdayTask, value);
         }
 
+        private WorkdayTask? _ActiveWorkingTask;
+        [JsonIgnore]
+        public WorkdayTask? ActiveWorkingTask
+        {
+            get => _ActiveWorkingTask;
+            set => SetField(ref _ActiveWorkingTask, value);
+        }
+
         private ObservableCollection<Project> _AllProjects = new ObservableCollection<Project>(new List<Project> { new Project { ProjectName = "Unknown" } });
         public ObservableCollection<Project> AllProjects
         {
             get => _AllProjects;
             set => SetField(ref _AllProjects, value);
+        }
+
+        public Project LastUsedProject
+        {
+            get => AllProjects.OrderByDescending(x => x.LastUsed).FirstOrDefault();
         }
 
         private Project? _CurrentProject;
@@ -180,7 +257,11 @@ namespace TimeRecorder.Models
             {
                 WorkdayTasks.Remove(workdayTask);
             }
-            CurrentWorkdayTask = WorkdayTasks.LastOrDefault();
+            if (ActiveWorkingTask == workdayTask)
+            {
+                SetActiveWorkingTask(LastUsedWorkdayTask);
+            }
+            CurrentWorkdayTask = LastUsedWorkdayTask;
         }
 
         private ICommand? _AddWorkdayTaskCommand;
@@ -194,6 +275,7 @@ namespace TimeRecorder.Models
             project.LastUsed = DateTimeOffset.Now;
             var workdayTask = new WorkdayTask { Project = project };
             WorkdayTasks.Add(workdayTask);
+            SetActiveWorkingTask(workdayTask);
             CurrentWorkdayTask = workdayTask;
             UpdateProjectList();
         }
@@ -219,7 +301,7 @@ namespace TimeRecorder.Models
         public ICommand SetPauseCommand { get { return _SetPauseCommand ??= new CommandHandler(SetPause); } }
         private void SetPause()
         {
-            AddDefaultProject("Pause");
+            AddDefaultProject(Project.PauseId, "Pause");
         }
 
         private ICommand? _SetAbsentCommand;
@@ -227,15 +309,15 @@ namespace TimeRecorder.Models
         public ICommand SetAbsentCommand { get { return _SetAbsentCommand ??= new CommandHandler(SetAbsent); } }
         private void SetAbsent()
         {
-            AddDefaultProject("Absent");
+            AddDefaultProject(Project.NotAtWorkId, "Pause - Not at work (Private matter)");
         }
 
-        private void AddDefaultProject(string projectName)
+        private void AddDefaultProject(Guid projectId, string projectName)
         {
-            var project = AllProjects.Where(x => x.ProjectName == projectName).FirstOrDefault();
+            var project = AllProjects.Where(x => x.ProjectId == projectId).FirstOrDefault();
             if (project == null)
             {
-                project = new Project { ProjectName = projectName };
+                project = new Project { ProjectId = projectId, ProjectName = projectName };
                 AllProjects.Add(project);
             }
             CurrentProject = project;

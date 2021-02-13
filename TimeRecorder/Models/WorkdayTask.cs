@@ -26,6 +26,13 @@ namespace TimeRecorder.Models
             set => SetField(ref _Created, value);
         }
 
+        private DateTimeOffset _LastUsed = DateTimeOffset.Now;
+        public DateTimeOffset LastUsed
+        {
+            get => _LastUsed;
+            set => SetField(ref _LastUsed, value);
+        }
+
         private TimeSpan _Correction;
         public TimeSpan Correction
         {
@@ -46,8 +53,22 @@ namespace TimeRecorder.Models
             get => Duration + Correction;
         }
 
+        private bool _IsActive;
+        [JsonIgnore]
+        public bool IsActive
+        {
+            get => _IsActive;
+            set => SetField(ref _IsActive, value);
+        }
+
         public void UpdateDuration(TimeSpan timeSpan)
         {
+            var now = DateTimeOffset.Now;
+            if (now.Second == 0)
+            {
+                // Update LastUsed every minute and if second between 0 - 2 too avoid unwanted updates
+                LastUsed = now;
+            }
             Duration += timeSpan;
         }
 
