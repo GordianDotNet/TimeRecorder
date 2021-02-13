@@ -203,61 +203,6 @@ namespace TimeRecorder
         {
             get => DataContext as Workday;
             set { DataContext = value; }
-        }        
-
-        private void StartWorkEntry(object sender, MouseButtonEventArgs e)
-        {
-            Data?.AddWorkdayTaskCommand.Execute(null);
-        }
-
-        private void OnProjectNameKeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-            {
-                AddNewProject();
-            }
-        }
-
-        private void OnNewProjectClick(object sender, RoutedEventArgs e)
-        {
-            AddNewProject();
-        }
-
-        private void AddNewProject()
-        {
-            Data?.AddProjectCommand.Execute(null);
-            ProjectNameText.Focus();
-            ProjectNameText.SelectAll();
-        }
-
-        private void OnRemoveProjectClick(object sender, RoutedEventArgs e)
-        {
-            Data?.RemoveProjectCommand.Execute(null);
-        }
-
-        private void OnRemoveWorkEntryClick(object sender, RoutedEventArgs e)
-        {
-            Data?.RemoveWorkdayTaskCommand.Execute(null);
-        }
-
-        private void SetActiveWorkdayTask(object sender, MouseButtonEventArgs e)
-        {
-            var workday = Data;
-            var workdayTask = Data?.CurrentWorkdayTask;
-            if (workday != null && workdayTask != null)
-            {
-                workday.SetActiveWorkingTask(workdayTask);
-            }
-        }
-
-        private void OnChangeWorkdayTaskProjectClick(object sender, RoutedEventArgs e)
-        {
-            var project = Data?.CurrentProject;
-            var workdayTask = Data?.CurrentWorkdayTask;
-            if (workdayTask != null && project != null)
-            {
-                workdayTask.Project = project;
-            }
         }
     }
 }

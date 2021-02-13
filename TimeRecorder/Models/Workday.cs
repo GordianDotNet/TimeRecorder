@@ -47,33 +47,29 @@ namespace TimeRecorder.Models
             var now = DateTimeOffset.Now;
             ActiveWorkingTask?.UpdateDuration(TICK_DURATION);
 
-            var time = PlannedWorkingHours - (now - WorkBegin);
-            RequiredWorkingHours = new TimeSpan(time.Hours, time.Minutes, time.Seconds);
-
-            var timeDone = now - WorkBegin;
+            var timeDone = (now - WorkBegin) - BookedPauseTime;
             DoneWorkingHours = new TimeSpan(timeDone.Hours, timeDone.Minutes, timeDone.Seconds);
+
+            RequiredWorkingHours = PlannedWorkingHours - DoneWorkingHours;
 
             var workingdayTasks = WorkdayTasks;
             if (workingdayTasks.Count > 0)
             {
-                BookedWorkingHours = TimeSpan.FromMilliseconds(workingdayTasks.Sum(x => (long)x.TotalDuration.TotalMilliseconds));
+                BookedWorkingHours = TimeSpan.FromMilliseconds(workingdayTasks
+                    .Where(x => x.Project.ProjectId != Project.PauseId && x.Project.ProjectId != Project.NotAtWorkId)
+                    .Sum(x => (long)x.TotalDuration.TotalMilliseconds));
+                BookedPauseTime = TimeSpan.FromMilliseconds(workingdayTasks
+                    .Where(x => x.Project.ProjectId == Project.PauseId || x.Project.ProjectId == Project.NotAtWorkId)
+                    .Sum(x => (long)x.TotalDuration.TotalMilliseconds));
             }
             else
             {
                 BookedWorkingHours = TimeSpan.Zero;
+                BookedPauseTime = TimeSpan.Zero;
             }
 
             WorkEnd = now;
         }
-
-        private TimeSpan _PlannedWorkingHours = new TimeSpan(8, 45, 0);
-        public TimeSpan PlannedWorkingHours
-        {
-            get => _PlannedWorkingHours;
-            set { SetField(ref _PlannedWorkingHours, value); OnPropertyChanged(nameof(PlannedWorkEnd)); }
-}
-
-        private TimeSpan _BookedWorkingHours = TimeSpan.Zero;
 
         internal void UpdateProjectReferences()
         {
@@ -84,6 +80,21 @@ namespace TimeRecorder.Models
             }
         }
 
+        private TimeSpan _PlannedWorkingHours = new TimeSpan(8, 0, 0);
+        public TimeSpan PlannedWorkingHours
+        {
+            get => _PlannedWorkingHours;
+            set { SetField(ref _PlannedWorkingHours, value); OnPropertyChanged(nameof(PlannedWorkEnd)); }
+        }
+
+        private TimeSpan _PlannedPauseTime = new TimeSpan(0, 45, 0);
+        public TimeSpan PlannedPauseTime
+        {
+            get => _PlannedPauseTime;
+            set { SetField(ref _PlannedPauseTime, value); OnPropertyChanged(nameof(PlannedWorkEnd)); OnPropertyChanged(nameof(NotBookedPauseTime)); }
+        }
+
+        private TimeSpan _BookedWorkingHours = TimeSpan.Zero;
         [JsonIgnore]
         public TimeSpan BookedWorkingHours
         {
@@ -91,10 +102,24 @@ namespace TimeRecorder.Models
             set { SetField(ref _BookedWorkingHours, value); OnPropertyChanged(nameof(NotBookedWorkingHours)); }
         }
 
+        private TimeSpan _BookedPauseTime = TimeSpan.Zero;
+        [JsonIgnore]
+        public TimeSpan BookedPauseTime
+        {
+            get => _BookedPauseTime;
+            set { SetField(ref _BookedPauseTime, value); OnPropertyChanged(nameof(NotBookedPauseTime)); OnPropertyChanged(nameof(PlannedWorkEnd)); }
+        }
+
         [JsonIgnore]
         public TimeSpan NotBookedWorkingHours
         {
             get => DoneWorkingHours - BookedWorkingHours;
+        }
+
+        [JsonIgnore]
+        public TimeSpan NotBookedPauseTime
+        {
+            get => PlannedPauseTime - BookedPauseTime;
         }
 
         private TimeSpan _RequiredWorkingHours;
@@ -121,7 +146,7 @@ namespace TimeRecorder.Models
         [JsonIgnore]
         public DateTimeOffset? PlannedWorkEnd
         {
-            get => WorkBegin + PlannedWorkingHours;
+            get => WorkBegin + PlannedWorkingHours + (PlannedPauseTime > BookedPauseTime ? PlannedPauseTime : BookedPauseTime);
         }
 
         private DateTimeOffset? _WorkEnd;
@@ -280,15 +305,42 @@ namespace TimeRecorder.Models
             UpdateProjectList();
         }
 
-        private ICommand? _AddWorkdayTaskDurationCommand;
+        private bool _ChangeWorkdayCorrection;
+        public bool ChangeWorkdayCorrection
+        {
+            get => _ChangeWorkdayCorrection;
+            set => SetField(ref _ChangeWorkdayCorrection, value);
+        }
+
+        private bool _ChangeWorkdayCreated;
+        public bool ChangeWorkdayCreated
+        {
+            get => _ChangeWorkdayCreated;
+            set => SetField(ref _ChangeWorkdayCreated, value);
+        }
+
+        private bool _ChangeWorkdayLastUsed;
+        public bool ChangeWorkdayLastUsed
+        {
+            get => _ChangeWorkdayLastUsed;
+            set => SetField(ref _ChangeWorkdayLastUsed, value);
+        }
+
+
+        private ICommand? _AddSelectedWorkdayTaskTimeCommand;
         [JsonIgnore]
-        public ICommand AddWorkdayTaskDurationCommand { get { return _AddWorkdayTaskDurationCommand ??= new CommandHandler<string>(AddWorkdayTaskDuration); } }
-        private void AddWorkdayTaskDuration(string strParam)
+        public ICommand AddSelectedWorkdayTaskTimeCommand { get { return _AddSelectedWorkdayTaskTimeCommand ??= new CommandHandler<string>(AddSelectedWorkdayTaskTime); } }
+        private void AddSelectedWorkdayTaskTime(string strParam)
         {
             var workdayTask = CurrentWorkdayTask;
             if (workdayTask != null && int.TryParse(strParam, out var duration))
             {
-                workdayTask.AddCorrection(TimeSpan.FromMinutes(duration));
+                if (ChangeWorkdayCorrection)
+                    workdayTask.Correction += TimeSpan.FromMinutes(duration);
+                else if (ChangeWorkdayCreated)
+                    workdayTask.Created += TimeSpan.FromMinutes(duration);
+                else if (ChangeWorkdayLastUsed)
+                    workdayTask.LastUsed += TimeSpan.FromMinutes(duration);
             }
         }
 
@@ -296,18 +348,18 @@ namespace TimeRecorder.Models
 
         #region Add default project (Pause, Absent, ...)
 
-        private ICommand? _SetPauseCommand;
+        private ICommand? _AddPauseCommand;
         [JsonIgnore]
-        public ICommand SetPauseCommand { get { return _SetPauseCommand ??= new CommandHandler(SetPause); } }
-        private void SetPause()
+        public ICommand AddPauseCommand { get { return _AddPauseCommand ??= new CommandHandler(AddPause); } }
+        private void AddPause()
         {
             AddDefaultProject(Project.PauseId, "Pause");
         }
 
-        private ICommand? _SetAbsentCommand;
+        private ICommand? _AddNotAtWorkCommand;
         [JsonIgnore]
-        public ICommand SetAbsentCommand { get { return _SetAbsentCommand ??= new CommandHandler(SetAbsent); } }
-        private void SetAbsent()
+        public ICommand AddNotAtWorkCommand { get { return _AddNotAtWorkCommand ??= new CommandHandler(AddNotAtWork); } }
+        private void AddNotAtWork()
         {
             AddDefaultProject(Project.NotAtWorkId, "Pause - Not at work (Private matter)");
         }

@@ -71,10 +71,5 @@ namespace TimeRecorder.Models
             }
             Duration += timeSpan;
         }
-
-        internal void AddCorrection(TimeSpan timeSpan)
-        {
-            Correction += timeSpan;
-        }
     }
 }

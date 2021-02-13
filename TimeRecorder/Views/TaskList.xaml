@@ -1,0 +1,107 @@
+﻿<UserControl x:Class="TimeRecorder.Views.TaskList"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TimeRecorder.Models"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance local:Workday, IsDesignTimeCreatable=True}"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Label Grid.Row="0" Grid.Column="0" Content="Change Task" VerticalAlignment="Center" Margin="2"/>
+            <RadioButton GroupName="1" Grid.Row="0" Grid.Column="1" Content="Duration" IsChecked="{Binding ChangeWorkdayCorrection}" VerticalAlignment="Center" Margin="2"/>
+            <RadioButton GroupName="1" Grid.Row="0" Grid.Column="2" Content="Start" IsChecked="{Binding ChangeWorkdayCreated}" VerticalAlignment="Center" Margin="2"/>
+            <RadioButton GroupName="1" Grid.Row="0" Grid.Column="3" Content="LastUsed" IsChecked="{Binding ChangeWorkdayLastUsed}" VerticalAlignment="Center" Margin="2"/>
+            <Label Grid.Row="0" Grid.Column="4" Content=" by minutes " VerticalAlignment="Center" Margin="2"/>
+            
+            <Button Grid.Row="0" Grid.Column="5" Content="-1" Command="{Binding AddSelectedWorkdayTaskTimeCommand}" CommandParameter="-1" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="6" Content="+1" Command="{Binding AddSelectedWorkdayTaskTimeCommand}" CommandParameter="+1" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="7" Content="-5" Command="{Binding AddSelectedWorkdayTaskTimeCommand}" CommandParameter="-5" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="8" Content="+5" Command="{Binding AddSelectedWorkdayTaskTimeCommand}" CommandParameter="+5" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="9" Content="-15" Command="{Binding AddSelectedWorkdayTaskTimeCommand}" CommandParameter="-15" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="10" Content="+15" Command="{Binding AddSelectedWorkdayTaskTimeCommand}" CommandParameter="+15" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="11" Content="-60" Command="{Binding AddSelectedWorkdayTaskTimeCommand}" CommandParameter="-60" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="12" Content="+60" Command="{Binding AddSelectedWorkdayTaskTimeCommand}" CommandParameter="+60" Margin="2" Padding="5" Background="AliceBlue"/>
+
+            <Button Grid.Row="0" Grid.Column="13" Content="Pause" Command="{Binding AddPauseCommand}" Margin="10,2,2,2" Padding="5" MinWidth="80" FontWeight="Bold"/>
+            <Button Grid.Row="0" Grid.Column="14" Content="Not at Work" Command="{Binding AddNotAtWorkCommand}" Margin="2" Padding="5" />
+        </Grid>
+        <ListView Grid.Row="1" Margin="2" ItemsSource="{Binding WorkdayTasks}" SelectedItem="{Binding CurrentWorkdayTask}" MouseDoubleClick="SetActiveWorkdayTask">
+            <ListView.Resources>
+                <Style TargetType="{x:Type GridViewColumnHeader}">
+                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                </Style>
+            </ListView.Resources>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Path=IsActive}" Value="True">
+                            <Setter Property="Background" Value="LightGreen"  />
+                            <Setter Property="FontWeight" Value="Bold" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="{Binding CurrentProject.ProjectName}" HeaderStringFormat="Switch entry to selected project: '{0}'" Click="OnChangeWorkdayTaskProjectClick" />
+                    <MenuItem Header="{Binding CurrentWorkdayTask.Project.ProjectName}" HeaderStringFormat="Remove entry: '{0}'" Click="OnRemoveWorkEntryClick" />
+                </ContextMenu>
+            </ListView.ContextMenu>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Project" Width="400" DisplayMemberBinding="{Binding Project.ProjectName}" />
+                    <GridViewColumn Header="Duration" Width="80" DisplayMemberBinding="{Binding TotalDuration}" />
+                    <GridViewColumn Header="Hours" Width="80">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding TotalDuration.TotalHours, StringFormat={}{0:N1}}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Start" Width="80">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Created, StringFormat={x:Static local:Constants.TimeUiFormat}}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="LastUsed" Width="80">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding LastUsed, StringFormat={x:Static local:Constants.TimeUiFormat}}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+</UserControl>
