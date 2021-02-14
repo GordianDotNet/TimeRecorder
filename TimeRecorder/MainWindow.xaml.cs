@@ -89,8 +89,18 @@ namespace TimeRecorder
                         }
                         else
                         {
-                            // insert
-                            workday.AllProjects.Add(importedProject);
+                            var projectIdIsDifferent = workday.AllProjects.Where(x => x.InternalName == importedProject.InternalName).FirstOrDefault();
+                            if (projectIdIsDifferent != null)
+                            {
+                                projectIdIsDifferent.ProjectId = importedProject.ProjectId;
+                                projectIdIsDifferent.ProjectName = importedProject.ProjectName;
+                                projectIdIsDifferent.InternalName = importedProject.InternalName;
+                            }
+                            else
+                            {
+                                // insert
+                                workday.AllProjects.Add(importedProject);
+                            }
                         }
                     }
 

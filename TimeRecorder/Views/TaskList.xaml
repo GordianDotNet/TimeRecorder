@@ -77,6 +77,7 @@
             </ListView.ContextMenu>
             <ListView.View>
                 <GridView>
+                    <GridViewColumn Header="Internal" DisplayMemberBinding="{Binding Project.InternalName}" />
                     <GridViewColumn Header="Project" Width="400" DisplayMemberBinding="{Binding Project.ProjectName}" />
                     <GridViewColumn Header="Duration" Width="80" DisplayMemberBinding="{Binding TotalDuration}" />
                     <GridViewColumn Header="Hours" Width="80">

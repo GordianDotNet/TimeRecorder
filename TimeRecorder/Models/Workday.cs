@@ -76,7 +76,9 @@ namespace TimeRecorder.Models
             var workingDayTasks = WorkdayTasks;
             foreach (var workindDayTask in WorkdayTasks)
             {
-                workindDayTask.Project = AllProjects.Where(x => x.ProjectId == workindDayTask.Project.ProjectId).FirstOrDefault() ?? workindDayTask.Project;
+                workindDayTask.Project = AllProjects.Where(x => x.ProjectId == workindDayTask.Project.ProjectId).FirstOrDefault() ??
+                    AllProjects.Where(x => x.InternalName == workindDayTask.Project.InternalName).FirstOrDefault() ??
+                    workindDayTask.Project;
             }
         }
 
@@ -426,6 +428,7 @@ namespace TimeRecorder.Models
                 project = new Project { ProjectId = projectId, ProjectName = projectName };
                 AllProjects.Add(project);
             }
+
             CurrentProject = project;
 
             AddWorkdayTask();
