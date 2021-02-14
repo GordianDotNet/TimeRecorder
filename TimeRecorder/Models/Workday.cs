@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Windows;
 using System.Windows.Input;
 
 namespace TimeRecorder.Models
@@ -69,6 +70,19 @@ namespace TimeRecorder.Models
                 BookedWorkingHours = TimeSpan.Zero;
                 BookedPauseTime = TimeSpan.Zero;
             }
+        }
+
+        private bool _IsExpertMode = false;
+        public bool IsExpertMode
+        {
+            get => _IsExpertMode;
+            set { SetField(ref _IsExpertMode, value); OnPropertyChanged(nameof(ExpertVisibility)); }
+        }
+
+        [JsonIgnore]
+        public Visibility ExpertVisibility
+        {
+            get => IsExpertMode ? Visibility.Visible : Visibility.Collapsed;
         }
 
         internal void UpdateProjectReferences()

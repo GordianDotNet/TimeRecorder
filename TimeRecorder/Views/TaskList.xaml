@@ -12,9 +12,12 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Row="0" Grid.Column="0" Visibility="{Binding ExpertVisibility}">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
@@ -49,11 +52,19 @@
             <Button Grid.Row="0" Grid.Column="10" Content="+15" Command="{Binding AddSelectedWorkdayTaskTimeCommand}" CommandParameter="+15" Margin="2" Padding="5" Background="AliceBlue"/>
             <Button Grid.Row="0" Grid.Column="11" Content="-60" Command="{Binding AddSelectedWorkdayTaskTimeCommand}" CommandParameter="-60" Margin="2" Padding="5" Background="AliceBlue"/>
             <Button Grid.Row="0" Grid.Column="12" Content="+60" Command="{Binding AddSelectedWorkdayTaskTimeCommand}" CommandParameter="+60" Margin="2" Padding="5" Background="AliceBlue"/>
-
-            <Button Grid.Row="0" Grid.Column="13" Content="Pause" Command="{Binding AddPauseCommand}" Margin="10,2,2,2" Padding="5" MinWidth="80" FontWeight="Bold"/>
-            <Button Grid.Row="0" Grid.Column="14" Content="Not at Work" Command="{Binding AddNotAtWorkCommand}" Margin="2" Padding="5" />
         </Grid>
-        <ListView Grid.Row="1" Margin="2" ItemsSource="{Binding WorkdayTasks}" SelectedItem="{Binding CurrentWorkdayTask}" MouseDoubleClick="SetActiveWorkdayTask">
+        <Grid Grid.Row="0" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Row="0" Grid.Column="0" Content="Pause" Command="{Binding AddPauseCommand}" Margin="10,2,2,2" Padding="5" MinWidth="80" FontWeight="Bold"/>
+            <Button Grid.Row="0" Grid.Column="1" Content="Not at Work" Command="{Binding AddNotAtWorkCommand}" Margin="2" Padding="5" />
+        </Grid>
+        <ListView Grid.Row="1" Margin="2" Grid.ColumnSpan="2" ItemsSource="{Binding WorkdayTasks}" SelectedItem="{Binding CurrentWorkdayTask}" MouseDoubleClick="SetActiveWorkdayTask">
             <ListView.Resources>
                 <Style TargetType="{x:Type GridViewColumnHeader}">
                     <Setter Property="HorizontalContentAlignment" Value="Center" />

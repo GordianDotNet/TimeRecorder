@@ -48,7 +48,7 @@
                 </GridView>
             </ListView.View>
         </ListView>
-        <Grid Grid.Row="3">
+        <Grid Grid.Row="3" Visibility="{Binding ExpertVisibility}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />

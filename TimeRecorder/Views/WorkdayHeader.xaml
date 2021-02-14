@@ -1,0 +1,114 @@
+﻿<UserControl x:Class="TimeRecorder.Views.WorkdayHeader"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TimeRecorder.Models"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance local:Workday, IsDesignTimeCreatable=True}"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Visibility="{Binding ExpertVisibility}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Label Grid.Row="0" Grid.Column="0" Content="Change" VerticalAlignment="Center" Margin="2"/>
+            <RadioButton GroupName="2" Grid.Row="0" Grid.Column="1" Content="Start of work" IsChecked="{Binding ChangeStartOfWork}" VerticalAlignment="Center" Margin="2"/>
+            <RadioButton GroupName="2" Grid.Row="0" Grid.Column="2" Content="End of work" IsChecked="{Binding ChangeEndOfWork}" VerticalAlignment="Center" Margin="2"/>
+            <RadioButton GroupName="2" Grid.Row="0" Grid.Column="3" Content="Planned hours" IsChecked="{Binding ChangePlannedWorkHours}" VerticalAlignment="Center" Margin="2"/>
+            <RadioButton GroupName="2" Grid.Row="0" Grid.Column="4" Content="Planned pause" IsChecked="{Binding ChangePlannedPauseTime}" VerticalAlignment="Center" Margin="2"/>
+            <Label Grid.Row="0" Grid.Column="5" Content=" by minutes " VerticalAlignment="Center" Margin="2"/>
+
+            <Button Grid.Row="0" Grid.Column="6" Content="-1" Command="{Binding AddConfigTimeCommand}" CommandParameter="-1" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="7" Content="+1" Command="{Binding AddConfigTimeCommand}" CommandParameter="+1" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="8" Content="-5" Command="{Binding AddConfigTimeCommand}" CommandParameter="-5" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="9" Content="+5" Command="{Binding AddConfigTimeCommand}" CommandParameter="+5" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="10" Content="-15" Command="{Binding AddConfigTimeCommand}" CommandParameter="-15" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="11" Content="+15" Command="{Binding AddConfigTimeCommand}" CommandParameter="+15" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="12" Content="-60" Command="{Binding AddConfigTimeCommand}" CommandParameter="-60" Margin="2" Padding="5" Background="AliceBlue"/>
+            <Button Grid.Row="0" Grid.Column="13" Content="+60" Command="{Binding AddConfigTimeCommand}" CommandParameter="+60" Margin="2" Padding="5" Background="AliceBlue"/>
+        </Grid>
+        <Grid Grid.Row="1" Background="LightBlue">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" MinWidth="50"/>
+
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+
+                <ColumnDefinition Width="Auto" MinWidth="250"/>
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Label Grid.Row="0" Grid.Column="0" Content="Planned hours" Visibility="{Binding ExpertVisibility}"/>
+            <Label Grid.Row="0" Grid.Column="1" Content="{Binding PlannedWorkingHours}" ContentStringFormat="{x:Static local:Constants.TimespanShortUiFormat}" Visibility="{Binding ExpertVisibility}"/>
+            <Label Grid.Row="0" Grid.Column="2" Content="{Binding PlannedWorkingHours.TotalHours}" ContentStringFormat="N2" Visibility="{Binding ExpertVisibility}"/>
+            <Label Grid.Row="0" Grid.Column="3" Content="Planned pause" Visibility="{Binding ExpertVisibility}"/>
+            <Label Grid.Row="0" Grid.Column="4" Content="{Binding PlannedPauseTime}" ContentStringFormat="hh\:mm" Visibility="{Binding ExpertVisibility}"/>
+
+            <Label Grid.Row="1" Grid.Column="0" Content="Already worked" Visibility="{Binding ExpertVisibility}"/>
+            <Label Grid.Row="1" Grid.Column="1" Content="{Binding DoneWorkingHours}" Visibility="{Binding ExpertVisibility}"/>
+            <Label Grid.Row="1" Grid.Column="2" Content="{Binding DoneWorkingHours.TotalHours}" ContentStringFormat="N2" Visibility="{Binding ExpertVisibility}"/>
+
+            <Label Grid.Row="2" Grid.Column="0" Content="Already booked" />
+            <Label Grid.Row="2" Grid.Column="1" Content="{Binding BookedWorkingHours}" />
+            <Label Grid.Row="2" Grid.Column="2" Content="{Binding BookedWorkingHours.TotalHours}" ContentStringFormat="N2" />
+            <Label Grid.Row="2" Grid.Column="3" Content="Pause taken" />
+            <Label Grid.Row="2" Grid.Column="4" Content="{Binding BookedPauseTime}" />
+            <Label Grid.Row="3" Grid.Column="0" Content="Not booked" />
+            <Label Grid.Row="3" Grid.Column="1" Content="{Binding NotBookedWorkingHours}" />
+            <Label Grid.Row="3" Grid.Column="2" Content="{Binding NotBookedWorkingHours.TotalHours}" ContentStringFormat="N2" />
+            <Label Grid.Row="3" Grid.Column="3" Content="Pause left" />
+            <Label Grid.Row="3" Grid.Column="4" Content="{Binding NotBookedPauseTime}" />
+
+            <Label Grid.Row="0" Grid.Column="6" Content="Planned end"/>
+            <Label Grid.Row="0" Grid.Column="7" Grid.ColumnSpan="3" Content="{Binding PlannedWorkEnd}" ContentStringFormat="{x:Static local:Constants.DateTimeUiFormat}" />
+
+            <Label Grid.Row="1" Grid.Column="6" Content="Started today" />
+            <Label Grid.Row="1" Grid.Column="7" Grid.ColumnSpan="1" Content="{Binding WorkBegin}" ContentStringFormat="{x:Static local:Constants.TimeShortUiFormat}" />
+            <Label Grid.Row="1" Grid.Column="8" Content="End" />
+            <Label Grid.Row="1" Grid.Column="9" Grid.ColumnSpan="2" Content="{Binding WorkEnd}" ContentStringFormat="{x:Static local:Constants.TimeUiFormat}" />
+
+            <Label Grid.Row="2" Grid.Column="6" Content="Required today" />
+            <Label Grid.Row="2" Grid.Column="7" Content="{Binding RequiredWorkingHours}" />
+            <Label Grid.Row="2" Grid.Column="8" Content="{Binding RequiredWorkingHours.TotalHours}" ContentStringFormat="N2" />
+            <ProgressBar Grid.Row="2" Grid.Column="9" Grid.ColumnSpan="2" Margin="8" Minimum="0" Maximum="{Binding PlannedWorkingHours.TotalMilliseconds, Mode=OneWay}" Value="{Binding DoneWorkingHours.TotalMilliseconds, Mode=OneWay}" />
+
+        </Grid>
+    </Grid>
+</UserControl>
