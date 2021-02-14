@@ -14,10 +14,25 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
+        <Menu Grid.Row="0">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Set storage location path ..." Click="SetStorageLocationClick"/>
+                <Separator />
+                <MenuItem Header="" Name="WorkdayPathMenuItem"/>
+            </MenuItem>
+            <MenuItem Header="_Project List">
+                <MenuItem Header="_Import projects ..." Click="ImportProjectListClick"/>
+                <MenuItem Header="_Export projects ..." Click="ExportProjectListClick"/>
+                <Separator />
+                <MenuItem Header="_Import projects at startup from" IsCheckable="True" Name="ImportProjectsAtStartup" Click="ImportProjectsAtStartup_Click"/>
+                <MenuItem Header="" Name="ProjectListPathMenuItem"/>
+            </MenuItem>
+        </Menu>
+        <Grid Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -56,7 +71,7 @@
             <Button Grid.Row="0" Grid.Column="12" Content="-60" Command="{Binding AddConfigTimeCommand}" CommandParameter="-60" Margin="2" Padding="5" Background="AliceBlue"/>
             <Button Grid.Row="0" Grid.Column="13" Content="+60" Command="{Binding AddConfigTimeCommand}" CommandParameter="+60" Margin="2" Padding="5" Background="AliceBlue"/>
         </Grid>
-        <Grid Grid.Row="1" Background="LightBlue">
+        <Grid Grid.Row="2" Background="LightBlue">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -114,7 +129,7 @@
             <ProgressBar Grid.Row="2" Grid.Column="9" Grid.ColumnSpan="2" Margin="8" Minimum="0" Maximum="{Binding PlannedWorkingHours.TotalMilliseconds, Mode=OneWay}" Value="{Binding DoneWorkingHours.TotalMilliseconds, Mode=OneWay}" />
 
         </Grid>
-        <views:TaskList Grid.Row="2"/>
-        <views:ProjectList Grid.Row="3"/>
+        <views:TaskList Grid.Row="3"/>
+        <views:ProjectList Grid.Row="4"/>
     </Grid>
 </Window>

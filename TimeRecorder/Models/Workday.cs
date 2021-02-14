@@ -9,28 +9,6 @@ using System.Windows.Input;
 
 namespace TimeRecorder.Models
 {
-    public class WorkdayConfig : ViewModelBase
-    {
-        private TimeSpan _PlannedWorkingHours = new TimeSpan(8, 0, 0);
-        public TimeSpan PlannedWorkingHours
-        {
-            get => _PlannedWorkingHours;
-            set { SetField(ref _PlannedWorkingHours, value); }
-        }
-
-        private TimeSpan _PlannedPauseTime = new TimeSpan(0, 45, 0);
-        public TimeSpan PlannedPauseTime
-        {
-            get => _PlannedPauseTime;
-            set { SetField(ref _PlannedPauseTime, value); }
-        }
-    }
-
-    public class ProjectList : ViewModelBase
-    {
-
-    }
-
     public class Workday : ViewModelBase
     {
         public Workday()
@@ -161,6 +139,7 @@ namespace TimeRecorder.Models
             set { SetField(ref _WorkBegin, value); OnPropertyChanged(nameof(PlannedWorkEnd)); }
         }
 
+        [JsonIgnore]
         public DateTimeOffset? PlannedWorkEnd
         {
             get => WorkBegin + PlannedWorkingHours + (PlannedPauseTime > BookedPauseTime ? PlannedPauseTime : BookedPauseTime);
@@ -202,7 +181,7 @@ namespace TimeRecorder.Models
             set => SetField(ref _ActiveWorkingTask, value);
         }
 
-        private ObservableCollection<Project> _AllProjects = new ObservableCollection<Project>(new List<Project> { new Project { ProjectName = "Unknown" } });
+        private ObservableCollection<Project> _AllProjects = new ObservableCollection<Project>(new List<Project> { });
         public ObservableCollection<Project> AllProjects
         {
             get => _AllProjects;
@@ -230,6 +209,7 @@ namespace TimeRecorder.Models
             set { SetField(ref _ProjectNameFilter, value); UpdateProjectList(); }
         }
 
+        [JsonIgnore]
         public List<Project> FilteredProjects
         {
             get
