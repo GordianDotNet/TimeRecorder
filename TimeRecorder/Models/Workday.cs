@@ -9,6 +9,28 @@ using System.Windows.Input;
 
 namespace TimeRecorder.Models
 {
+    public class WorkdayConfig : ViewModelBase
+    {
+        private TimeSpan _PlannedWorkingHours = new TimeSpan(8, 0, 0);
+        public TimeSpan PlannedWorkingHours
+        {
+            get => _PlannedWorkingHours;
+            set { SetField(ref _PlannedWorkingHours, value); }
+        }
+
+        private TimeSpan _PlannedPauseTime = new TimeSpan(0, 45, 0);
+        public TimeSpan PlannedPauseTime
+        {
+            get => _PlannedPauseTime;
+            set { SetField(ref _PlannedPauseTime, value); }
+        }
+    }
+
+    public class ProjectList : ViewModelBase
+    {
+
+    }
+
     public class Workday : ViewModelBase
     {
         public Workday()
@@ -45,9 +67,11 @@ namespace TimeRecorder.Models
         private void DispatcherTimerTick(object? sender, EventArgs e)
         {
             var now = DateTimeOffset.Now;
+            WorkEnd = now;
+
             ActiveWorkingTask?.UpdateDuration(TICK_DURATION);
 
-            var timeDone = (now - WorkBegin) - BookedPauseTime;
+            var timeDone = (WorkEnd - WorkBegin) - BookedPauseTime;
             DoneWorkingHours = new TimeSpan(timeDone.Hours, timeDone.Minutes, timeDone.Seconds);
 
             RequiredWorkingHours = PlannedWorkingHours - DoneWorkingHours;
@@ -67,8 +91,6 @@ namespace TimeRecorder.Models
                 BookedWorkingHours = TimeSpan.Zero;
                 BookedPauseTime = TimeSpan.Zero;
             }
-
-            WorkEnd = now;
         }
 
         internal void UpdateProjectReferences()
@@ -95,7 +117,6 @@ namespace TimeRecorder.Models
         }
 
         private TimeSpan _BookedWorkingHours = TimeSpan.Zero;
-        [JsonIgnore]
         public TimeSpan BookedWorkingHours
         {
             get => _BookedWorkingHours;
@@ -103,20 +124,17 @@ namespace TimeRecorder.Models
         }
 
         private TimeSpan _BookedPauseTime = TimeSpan.Zero;
-        [JsonIgnore]
         public TimeSpan BookedPauseTime
         {
             get => _BookedPauseTime;
             set { SetField(ref _BookedPauseTime, value); OnPropertyChanged(nameof(NotBookedPauseTime)); OnPropertyChanged(nameof(PlannedWorkEnd)); }
         }
 
-        [JsonIgnore]
         public TimeSpan NotBookedWorkingHours
         {
             get => DoneWorkingHours - BookedWorkingHours;
         }
 
-        [JsonIgnore]
         public TimeSpan NotBookedPauseTime
         {
             get => PlannedPauseTime - BookedPauseTime;
@@ -136,22 +154,21 @@ namespace TimeRecorder.Models
             set => SetField(ref _DoneWorkingHours, value);
         }
 
-        private DateTimeOffset _WorkBegin = DateTime.Now;
+        private DateTimeOffset _WorkBegin = DateTimeOffset.Now;
         public DateTimeOffset WorkBegin
         {
             get => _WorkBegin;
             set { SetField(ref _WorkBegin, value); OnPropertyChanged(nameof(PlannedWorkEnd)); }
         }
 
-        [JsonIgnore]
         public DateTimeOffset? PlannedWorkEnd
         {
             get => WorkBegin + PlannedWorkingHours + (PlannedPauseTime > BookedPauseTime ? PlannedPauseTime : BookedPauseTime);
         }
 
-        private DateTimeOffset? _WorkEnd;
+        private DateTimeOffset _WorkEnd = DateTimeOffset.Now;
 
-        public DateTimeOffset? WorkEnd
+        public DateTimeOffset WorkEnd
         {
             get => _WorkEnd;
             set => SetField(ref _WorkEnd, value);
@@ -206,6 +223,7 @@ namespace TimeRecorder.Models
         }
 
         private string _ProjectNameFilter = string.Empty;
+        [JsonIgnore]
         public string ProjectNameFilter
         {
             get => _ProjectNameFilter;
@@ -234,6 +252,60 @@ namespace TimeRecorder.Models
         {
             OnPropertyChanged(nameof(FilteredProjects));
         }
+
+        #region Commands config
+
+        private bool _ChangeStartOfWork = true;
+        [JsonIgnore]
+        public bool ChangeStartOfWork
+        {
+            get => _ChangeStartOfWork;
+            set => SetField(ref _ChangeStartOfWork, value);
+        }
+
+        private bool _ChangeEndOfWork;
+        [JsonIgnore]
+        public bool ChangeEndOfWork
+        {
+            get => _ChangeEndOfWork;
+            set => SetField(ref _ChangeEndOfWork, value);
+        }
+
+        private bool _ChangePlannedWorkHours;
+        [JsonIgnore]
+        public bool ChangePlannedWorkHours
+        {
+            get => _ChangePlannedWorkHours;
+            set => SetField(ref _ChangePlannedWorkHours, value);
+        }
+
+        private bool _ChangePlannedPauseTime;
+        [JsonIgnore]
+        public bool ChangePlannedPauseTime
+        {
+            get => _ChangePlannedPauseTime;
+            set => SetField(ref _ChangePlannedPauseTime, value);
+        }
+
+        private ICommand? _AddConfigTimeCommand;
+        [JsonIgnore]
+        public ICommand AddConfigTimeCommand { get { return _AddConfigTimeCommand ??= new CommandHandler<string>(AddConfigTime); } }
+        private void AddConfigTime(string strParam)
+        {
+            if (int.TryParse(strParam, out var duration))
+            {
+                if (ChangeStartOfWork)
+                    WorkBegin += TimeSpan.FromMinutes(duration);
+                else if (ChangeEndOfWork)
+                    WorkEnd += TimeSpan.FromMinutes(duration);
+                else if (ChangePlannedWorkHours)
+                    PlannedWorkingHours += TimeSpan.FromMinutes(duration);
+                else if (ChangePlannedPauseTime)
+                    PlannedPauseTime += TimeSpan.FromMinutes(duration);
+            }
+        }
+
+        #endregion
 
         #region Commands Project
 
@@ -305,7 +377,8 @@ namespace TimeRecorder.Models
             UpdateProjectList();
         }
 
-        private bool _ChangeWorkdayCorrection;
+        private bool _ChangeWorkdayCorrection = true;
+        [JsonIgnore]
         public bool ChangeWorkdayCorrection
         {
             get => _ChangeWorkdayCorrection;
@@ -313,6 +386,7 @@ namespace TimeRecorder.Models
         }
 
         private bool _ChangeWorkdayCreated;
+        [JsonIgnore]
         public bool ChangeWorkdayCreated
         {
             get => _ChangeWorkdayCreated;
@@ -320,12 +394,12 @@ namespace TimeRecorder.Models
         }
 
         private bool _ChangeWorkdayLastUsed;
+        [JsonIgnore]
         public bool ChangeWorkdayLastUsed
         {
             get => _ChangeWorkdayLastUsed;
             set => SetField(ref _ChangeWorkdayLastUsed, value);
         }
-
 
         private ICommand? _AddSelectedWorkdayTaskTimeCommand;
         [JsonIgnore]

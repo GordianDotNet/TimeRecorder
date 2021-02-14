@@ -82,7 +82,7 @@
                     <GridViewColumn Header="Hours" Width="80">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding TotalDuration.TotalHours, StringFormat={}{0:N1}}" />
+                                <TextBlock Text="{Binding TotalDuration.TotalHours, StringFormat={}{0:N2}}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
