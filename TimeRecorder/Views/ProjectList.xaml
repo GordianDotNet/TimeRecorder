@@ -36,6 +36,7 @@
             </ListView.ContextMenu>
             <ListView.View>
                 <GridView>
+                    <GridViewColumn Header="ID" DisplayMemberBinding="{Binding InternalName}" />
                     <GridViewColumn Header="Project / Task" Width="500" DisplayMemberBinding="{Binding ProjectName}" />
                     <GridViewColumn Header="Last used" Width="200">
                         <GridViewColumn.CellTemplate>
@@ -50,13 +51,15 @@
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="Selected Project - Name:" />
-            <TextBox Grid.Column="1" Margin="2" Name="ProjectNameText"  Text="{Binding CurrentProject.ProjectName, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Stretch" KeyUp="OnProjectNameKeyUp" />
-            <Button Grid.Column="2" Margin="2" Click="OnNewProjectClick" Content="New Project" Width="100" ToolTip="Add new Project. Alternative: Press Enter while in project name text field." />
+            <TextBox Grid.Column="1" Margin="2" Text="{Binding CurrentProject.InternalName, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Grid.Column="2" Margin="2" Name="ProjectNameText"  Text="{Binding CurrentProject.ProjectName, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Stretch" KeyUp="OnProjectNameKeyUp" />
+            <Button Grid.Column="3" Margin="2" Click="OnNewProjectClick" Content="New Project" Width="100" ToolTip="Add new Project. Alternative: Press Enter while in project name text field." />
         </Grid>
     </Grid>
 </UserControl>
