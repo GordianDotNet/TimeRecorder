@@ -47,7 +47,14 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Statistic">
-
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="100" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBox Grid.Row="0" Text="{Binding TimeCardStatistic}" />
+                    <TextBox Grid.Row="1" Text="{Binding ProjectStatistic}" />
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>

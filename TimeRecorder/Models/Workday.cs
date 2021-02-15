@@ -70,6 +70,50 @@ namespace TimeRecorder.Models
                 BookedWorkingHours = TimeSpan.Zero;
                 BookedPauseTime = TimeSpan.Zero;
             }
+
+            var notWorkingTasks = workingdayTasks.Where(x => x.Project.ProjectId == Project.NotAtWorkId).OrderBy(x => x.Created).ToList();
+
+            var stringBuilder = new StringBuilder();
+            stringBuilder.Append(WorkBegin.ToString("HH:mm")).Append(" - ");
+            if (notWorkingTasks.Count > 0)
+            {
+                notWorkingTasks.ForEach(x =>
+                {
+                    stringBuilder.AppendLine(x.Created.ToString("HH:mm"));
+                    stringBuilder.Append(x.Created.Add(x.TotalDuration).ToString("HH:mm")).Append(" - ");
+                });
+            }
+            stringBuilder.Append(WorkEnd.ToString("HH:mm"));
+
+            TimeCardStatistic = stringBuilder.ToString();
+
+            var notPauseTasks = workingdayTasks
+                .Where(x => x.Project.ProjectId != Project.PauseId && x.Project.ProjectId != Project.NotAtWorkId)
+                .GroupBy(x => new { Name = string.IsNullOrWhiteSpace(x.Project.InternalName) ? x.Project.ProjectId.ToString() : x.Project.InternalName })
+                .Select(g => (Id: g.First().Project.InternalName, Name: g.First().Project.ProjectName, TotalDuration: g.Sum(y => y.TotalDuration.TotalMilliseconds))).ToList();
+
+            stringBuilder = new StringBuilder();
+            notPauseTasks.ForEach(x =>
+            {
+                stringBuilder.AppendLine($"{x.Id}\t{x.Name}\t{TimeSpan.FromMilliseconds(x.TotalDuration).TotalHours:N1}");
+            });
+
+            ProjectStatistic = stringBuilder.ToString();
+        }
+
+        private string _TimeCardStatistic;
+        [JsonIgnore]
+        public string TimeCardStatistic
+        {
+            get => _TimeCardStatistic;
+            set => SetField(ref _TimeCardStatistic, value);
+        }
+
+        private string _ProjectStatistic;
+        public string ProjectStatistic
+        {
+            get => _ProjectStatistic;
+            set => SetField(ref _ProjectStatistic, value);
         }
 
         private bool _IsExpertMode = false;
