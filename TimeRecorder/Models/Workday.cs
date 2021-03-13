@@ -40,6 +40,8 @@ namespace TimeRecorder.Models
             {
                 newActiveWorkTask.IsActive = true;
                 ActiveWorkingTask = newActiveWorkTask;
+                newActiveWorkTask.Project.LastUsed = DateTimeOffset.Now;
+                UpdateProjectList();
             }
         }
 
@@ -409,12 +411,10 @@ namespace TimeRecorder.Models
             var project = CurrentProject;
             if (project == null)
                 return;
-            project.LastUsed = DateTimeOffset.Now;
             var workdayTask = new WorkdayTask { Project = project };
             WorkdayTasks.Add(workdayTask);
             SetActiveWorkingTask(workdayTask);
             CurrentWorkdayTask = workdayTask;
-            UpdateProjectList();
         }
 
         private bool _ChangeWorkdayCorrection = true;

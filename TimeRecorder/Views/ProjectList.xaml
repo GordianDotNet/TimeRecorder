@@ -37,8 +37,8 @@
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Internal" DisplayMemberBinding="{Binding InternalName}" />
-                    <GridViewColumn Header="Project / Task" Width="500" DisplayMemberBinding="{Binding ProjectName}" />
-                    <GridViewColumn Header="Last used" Width="200">
+                    <GridViewColumn Header="Project / Task" DisplayMemberBinding="{Binding ProjectName}" />
+                    <GridViewColumn Header="Last used">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding LastUsed, StringFormat={x:Static local:Constants.DateTimeUiFormat}}" />

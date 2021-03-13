@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:TimeRecorder.Models" xmlns:views="clr-namespace:TimeRecorder.Views"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance local:Workday, IsDesignTimeCreatable=True}"
-        Title="Time Recorder" Height="750" Width="900"
+        Title="Time Recorder" Height="600" Width="820"
         Loaded="Window_Loaded"
         Closed="Window_Closed"
         >

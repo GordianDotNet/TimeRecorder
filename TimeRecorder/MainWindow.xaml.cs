@@ -25,6 +25,12 @@ namespace TimeRecorder
             InitializeComponent();
         }
 
+        private Workday? Data
+        {
+            get => DataContext as Workday;
+            set { DataContext = value; }
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -53,8 +59,19 @@ namespace TimeRecorder
                 currentWorkDay.StartTimer();
 
                 currentWorkDay.CurrentProject = currentWorkDay.LastUsedProject;
-                currentWorkDay.CurrentWorkdayTask = currentWorkDay.LastUsedWorkdayTask;
-                currentWorkDay.SetActiveWorkingTask(currentWorkDay.LastUsedWorkdayTask);
+
+                if (currentWorkDay.LastUsedWorkdayTask == null)
+                {
+                    if (currentWorkDay.CurrentProject != null)
+                    {
+                        currentWorkDay.AddWorkdayTaskCommand.Execute(null);
+                    }
+                }
+                else
+                {
+                    currentWorkDay.CurrentWorkdayTask = currentWorkDay.LastUsedWorkdayTask;
+                    currentWorkDay.SetActiveWorkingTask(currentWorkDay.LastUsedWorkdayTask);
+                }
 
                 DataContext = currentWorkDay;
 
@@ -225,6 +242,7 @@ namespace TimeRecorder
                         WorkBegin = loginDate,
                         AllProjects = oldWorkday.AllProjects, 
                         PlannedWorkingHours = oldWorkday.PlannedWorkingHours,
+                        IsExpertMode = oldWorkday.IsExpertMode,
                     };
                 }
             }
@@ -251,7 +269,7 @@ namespace TimeRecorder
                         var backupDirInfo = new DirectoryInfo(backupDir);
                         if (backupDirInfo.Exists && backupDirInfo.CreationTimeUtc < DateTimeOffset.UtcNow.Date)
                         {
-                            Directory.Delete(backupDir);
+                            Directory.Delete(backupDir, true);
                         }
                         Directory.CreateDirectory(backupDir);
                         File.Copy(path, Path.Combine(backupDir, $"{Path.GetFileName(path)}.{DateTimeOffset.Now.ToFileTime()}"), true);
@@ -295,12 +313,6 @@ namespace TimeRecorder
             }
 
             return Task.CompletedTask;
-        }
-
-        private Workday? Data
-        {
-            get => DataContext as Workday;
-            set { DataContext = value; }
         }
 
         private void ImportProjectsAtStartup_Click(object sender, RoutedEventArgs e)
